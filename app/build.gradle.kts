@@ -80,7 +80,7 @@ dependencies {
 
     // ViewModel and LiveData for MVVM architecture
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha07")
-    implementation("androidx.lifecycle:lifecycle-livedata:2.3.1")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.3.1")
 
     // Dagger Hilt
     val hiltVersion = "2.48"
@@ -108,4 +108,11 @@ dependencies {
 
     // Palette API for accessing to the primary colors in an image
     implementation("androidx.palette:palette-ktx:1.0.0")
+
+    // Timber for logging
+    implementation("com.jakewharton.timber:timber:5.0.1")
+
+    // To Change Status Bar Color
+    val uiControllerVersion = "0.32.0"
+    implementation("com.google.accompanist:accompanist-systemuicontroller:$uiControllerVersion")
 }
