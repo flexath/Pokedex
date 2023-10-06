@@ -12,6 +12,7 @@ import androidx.palette.graphics.Palette
 import com.flexath.pokedex.data.repository.PokedexRepository
 import com.flexath.pokedex.network.PAGE_SIZE
 import com.flexath.pokedex.ui.models.PokedexEntryItem
+import com.flexath.pokedex.utils.LiveNetworkChecker
 import com.flexath.pokedex.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
