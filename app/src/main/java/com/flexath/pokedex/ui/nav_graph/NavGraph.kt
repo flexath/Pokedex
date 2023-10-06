@@ -1,6 +1,8 @@
 package com.flexath.pokedex.ui.nav_graph
 
+import android.graphics.Color
 import androidx.compose.runtime.Composable
+import androidx.core.graphics.toColor
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
@@ -34,7 +36,7 @@ fun NavHost(navController: NavHostController) {
         ) {
             val dominantColor = it.arguments?.getInt(ARG_DOMINANT_COLOR)
             val pokedexName = it.arguments?.getString(ARG_POKEDEX_NAME)
-            DetailScreen(navController = navController,dominantColor,pokedexName)
+            DetailScreen(navController = navController, androidx.compose.ui.graphics.Color.Blue,pokedexName)
         }
     }
 }

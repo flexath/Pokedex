@@ -3,6 +3,7 @@ package com.flexath.pokedex.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.FlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,12 +16,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -63,7 +69,10 @@ import com.flexath.pokedex.ui.view_models.PokedexListViewModel
 import timber.log.Timber
 
 @Composable
-fun HomeScreen(navController: NavHostController) {
+fun HomeScreen(
+    navController: NavHostController,
+    viewModel: PokedexListViewModel = hiltViewModel()
+) {
     Surface(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -75,7 +84,7 @@ fun HomeScreen(navController: NavHostController) {
                 contentDescription = "Pokemon",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .align(Alignment.CenterHorizontally)
+                    .align(CenterHorizontally)
             )
 
             SearchBar(
@@ -88,9 +97,10 @@ fun HomeScreen(navController: NavHostController) {
                 hint = "Search Pokemon...",
                 onSearchText = {
                     Timber.tag("SearchText : ").i(it)
+                    viewModel.searchPokedex(it)
                 })
 
-            PokedexEntryList(entryList = pokeList, navController = navController)
+            PokedexEntryList(navController = navController)
         }
     }
 }
@@ -132,7 +142,7 @@ fun SearchBar(
                 .background(color = Color.White, shape = CircleShape)
                 .padding(horizontal = 20.dp, vertical = 16.dp)
                 .onFocusChanged {
-                    isHintDisplayed != it.isFocused
+                    isHintDisplayed != it.isFocused && text.isNotEmpty()
                 }
         )
 
@@ -149,42 +159,43 @@ fun SearchBar(
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun PokedexEntryList(
-    entryList : List<PokedexEntryItem>,
-    navController: NavHostController
+    navController: NavHostController,
+    viewModel: PokedexListViewModel = hiltViewModel()
 ) {
+
+    val pokedexList by remember { viewModel.pokedexList }
+    val isLoading by remember { viewModel.isLoading }
+    val loadError by remember { viewModel.loadError }
+    val endReached by remember { viewModel.endReached }
+    val isSearching by remember { viewModel.isSearching }
+
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 140.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
         horizontalArrangement = Arrangement.spacedBy(20.dp),
         contentPadding = PaddingValues(horizontal = 20.dp)
     ) {
-        items(entryList) {
+        itemsIndexed(pokedexList) {index , entry ->
+            if( index >= pokedexList.size-1 && !endReached && !isLoading && !isSearching) {
+                viewModel.loadPokedexListPaginated()
+            }
             PokedexEntry(
-                entry = it,
-                navController = navController
+                entry = entry,
+                navController = navController,
+                viewModel = viewModel
             )
         }
     }
 }
 
-val pokeList = listOf(
-    PokedexEntryItem("Bill 1","https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png",1),
-    PokedexEntryItem("Bill 2","https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/2.png",2),
-    PokedexEntryItem("Bill 3","https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/3.png",3),
-    PokedexEntryItem("Bill 4","https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png",4),
-    PokedexEntryItem("Bill 5","https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/5.png",5),
-    PokedexEntryItem("Bill 6","https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/6.png",6),
-    PokedexEntryItem("Bill 7","https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png",7),
-)
-
 @Composable
 fun PokedexEntry(
     entry: PokedexEntryItem,
     navController: NavHostController,
-    modifier: Modifier = Modifier,
-    viewModel: PokedexListViewModel = hiltViewModel()
+    viewModel: PokedexListViewModel
 ) {
     val defaultDominantColor = MaterialTheme.colorScheme.surface
 
@@ -193,12 +204,12 @@ fun PokedexEntry(
     }
 
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize().padding(bottom = 10.dp)
     ) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .shadow(elevation = 5.dp, RoundedCornerShape(10.dp))
+                .shadow(elevation = 3.dp, RoundedCornerShape(10.dp))
                 .clip(RoundedCornerShape(10.dp))
                 .aspectRatio(1f)
                 .background(
@@ -229,7 +240,7 @@ fun PokedexEntry(
                     loading = {
                         CircularProgressIndicator(
                             color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.scale(0.5f)
+                            modifier = Modifier.scale(0.3f)
                         )
                     },
                     onSuccess = {
@@ -247,7 +258,9 @@ fun PokedexEntry(
                     fontFamily = RobotoCondensed,
                     fontSize = 20.sp,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxSize().padding(bottom = 20.dp)
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = 20.dp)
                 )
             }
         }
@@ -257,7 +270,7 @@ fun PokedexEntry(
 }
 
 @Preview(showBackground = true)
-@Composable()
+@Composable
 fun PreviewHome() {
     Surface(
         modifier = Modifier.fillMaxSize(),
