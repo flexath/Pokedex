@@ -28,11 +28,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             Surface(
-                modifier = Modifier.fillMaxSize().background(color = MaterialTheme.colorScheme.background)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(color = MaterialTheme.colorScheme.primary)
             ) {
                 navController = rememberNavController()
                 PokedexTheme {
-                    ChangeStatusBarColor()
+                    ChangeStatusBarColor(Color.Transparent,true)
                     NavHost(navController = navController)
                 }
             }
@@ -41,12 +43,12 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ChangeStatusBarColor() {
+fun ChangeStatusBarColor(color:Color,isDark:Boolean) {
     val systemUiController = rememberSystemUiController()
     SideEffect {
         systemUiController.setStatusBarColor(
-            color = Color.Transparent,
-            darkIcons = true,
+            color = color,
+            darkIcons = isDark
         )
     }
 }

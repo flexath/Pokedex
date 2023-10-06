@@ -85,6 +85,10 @@ class PokedexListViewModel @Inject constructor(
                     isLoading.value = false
                     loadError.value = result.message ?: ""
                 }
+
+                is Resource.Loading -> {
+
+                }
             }
         }
     }
